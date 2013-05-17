@@ -1,9 +1,10 @@
 # 在 VPS 上安装 Discourse 论坛程序的中文指南
 
-## 相关说明
+#### 相关说明
 
 本指南基于以下资源创建：
 
+- Discourse 官方[开发者指南](https://github.com/discourse/discourse/blob/master/docs/DEVELOPER-ADVANCED.md)。
 - Christopher Baus <christopher@baus.net> 的 Discourse [安装指南（英文）](https://github.com/baus/install-discourse)。
 - Lee Dohm <lee@liftedstudios.com> 的 Discourse [安装指南（英文）](https://github.com/lee-dohm/install-discourse)。
 
@@ -11,9 +12,9 @@
 
 关于 Discourse 的详细信息，请访问其[官方网站](http://discourse.org)。
 
-## 安装环境
+#### 本指南在以下环境安装成功
 
-- 一台安装了 Ubuntu 12.10 x86 操作系统的 VPS
+- 一台安装 Ubuntu 12.10 x86 操作系统的 VPS 服务器
 - 内存 1G （Discourse 官方推荐的最小值）
 
 

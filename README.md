@@ -4,8 +4,8 @@
 
 本指南基于以下资源创建：
 
-- Christopher Baus <christopher@baus.net> 的 Discourse 安装指南（英文），遵循 GPL 2.0 协议。
-- Lee Dohm <lee@liftedstudios.com> 的 Discourse 安装指南（英文）。
+- Christopher Baus <christopher@baus.net> 的 Discourse [安装指南（英文）](https://github.com/baus/install-discourse)。
+- Lee Dohm <lee@liftedstudios.com> 的 Discourse [安装指南（英文）](https://github.com/lee-dohm/install-discourse)。
 
 本指南遵循创作共用协议，欢迎转载，请注明出处及原始链接。
 

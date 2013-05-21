@@ -73,18 +73,18 @@ $ sudo -u postgres createuser admin -s -P
 # 按照系统提示，输入两遍密码
 ```
 
-### 安装并配置 RVM 和 Ruby
+### 安装并配置 rvm 和 Ruby
 
-本文使用 RVM 来安装和管理 Ruby 及相关的 Gem。
+本文使用 rvm 来安装和管理 Ruby 及相关的 Gem。
 
-首先，安装 RVM，并将 admin 用户加入 rvm 组。
+首先，安装 rvm，并将 admin 用户加入 rvm 组。
 
 ```bash
 $ curl -L https://get.rvm.io | sudo bash -s stable
 $ sudo adduser admin rvm
 ```
 
-然后注销一次，再重新登录，使得变更生效，并激活 RVM。
+然后注销一次，再重新登录，使得变更生效，并激活 rvm。
 
 ```bash
 $ logout
@@ -117,7 +117,7 @@ $ echo "1.9.3" > .ruby-version
 $ echo "discourse" > .ruby-gemset
 ```
 
-退到 admin 主目录，然后再次进入 Discourse 目录，以便 rvm 对 .ruby-version 和 .ruby-gemset 的管理生效。
+退到 admin 主目录，然后再次进入 Discourse 目录，以激活 rvm。
 
 ```bash
 $ cd ~ && cd ~/source/discourse
@@ -194,7 +194,7 @@ $ export RAILS_ENV=development
 $ rake db:create
 $ rake db:migrate
 $ rake db:seed_fu
-# 启动 thin 服务器
+# 启动 thin 服务器器
 $ thin start
 ```
 

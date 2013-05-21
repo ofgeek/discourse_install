@@ -472,8 +472,9 @@ $ sudo start discourse
 本指南基于以下资源创建，特此表示感谢：
 
 - Discourse 官方[开发者指南](https://github.com/discourse/discourse/blob/master/docs/DEVELOPER-ADVANCED.md)。
-- Christopher Baus <christopher@baus.net> 的 Discourse [安装指南（英文）](https://github.com/baus/install-discourse)。
-- Lee Dohm <lee@liftedstudios.com> 的 Discourse [安装指南（英文）](https://github.com/lee-dohm/install-discourse)。
+- Christopher Baus 的 Discourse [安装指南（英文）](https://github.com/baus/install-discourse)。
+- Lee Dohm 的 Discourse [安装指南（英文）](https://github.com/lee-dohm/install-discourse)。
+- surrealroad 的 Discourse [安装指南（英文）](https://gist.github.com/surrealroad/5146661)。
 
 本指南遵循创作共用协议，欢迎转载，请注明出处及原始链接。
 

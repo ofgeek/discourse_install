@@ -19,92 +19,78 @@
 
 
 
+## 安装并测试 Discourse
 
-## Log in to Your Server
+**说明：为了操作的安全，不推荐直接使用 root 账户安装 Discourse，建议在 VPS 上增加一个用户，本文设为 admin，你可以任意设定喜欢的名称。本文将 VPS 的主机名设为 ofgeek.com，读者请根据实际情况自行修改。**
 
-I will use discoursetest.org when a domain name is required in the installation. You should replace discoursetest.org with your own domain name. If you are using OS X or Linux, start a terminal and ssh to your new server. Windows users should consider installing [Putty](http://putty.org/) to access their new server.
+### 登录 VPS
 
-## Create a User Account
+用 root 登录 VPS，创建新用户 admin，并将其加入 sudo 组，以获取管理员权限。（关于登录 VPS 的方法，本文不做详细介绍，如有需要请自行查阅。Mac OS X 或 Linux 用户可以直接打开终端使用 ssh 进行连接。Windows 用户推荐使用 [Xshell](http://www.netsarang.com/products/xsh_overview.html)，非商业用途可免费使用）。
 
-While the Amazon EC2 Ubuntu images all have a non-root `ubuntu` admin user, I chose to create a more personal admin user account. For the purposes of this document, I'm going to call the new user `admin`.
-
-Adding the user to the sudo group will allow the user to perform tasks as root using the [sudo](https://help.ubuntu.com/community/RootSudo) command. 
 
 ```bash
 $ sudo adduser admin
 $ sudo adduser admin sudo
 ```
 
-If you need help configuring SSH access to the new `admin` account and you're using Unix or OS X, you can use [these instructions](SSH.md).
-
-## Log in Using the Admin Account
+退出 root 账户，用 admin 账户重新登录 VPS。
 
 ```bash
 $ logout
-# Now back at the local terminal prompt
-$ ssh admin@discoursetest.org
+$ ssh admin@ofgeek.com
 ```
 
-## Use `apt-get` to Install Core System Dependencies
-
-The apt-get command is used to add packages to Ubuntu (and all Debian based Linux distributions). The Amazon EC2 Ubuntu images come with a limited configuration, so you will have to install many of the software dependencies yourself.
-
-To install system packages, you must have root privileges. Since the admin account is part of the sudo group, the admin account can run commands with root privileges by using the sudo command. Just prepend `sudo` to any commands you want to run as root. This includes apt-get commands to install packages.
+### 安装 Discourse 所需的系统包文件
 
 ```bash
-# Install required packages
 $ sudo apt-get install git-core build-essential postgresql postgresql-contrib libxml2-dev libxslt-dev libpq-dev redis-server nginx postfix
 ```
 
-During the installation, you will be prompted for Postfix configuration information. [Postfix](https://help.ubuntu.com/community/Postfix) is used to send mail from Discourse. Just keep the default "Internet Site."
+在安装过程中，会弹出 Postfix 的配置界面，它是 Linux 系统中管理邮件程序，一般情况下请选择"Internet Site"即可，然后在下一步输入你自己的域名，在本文中则是 ofgeek.com。
 
-At the next prompt just enter your domain name. In my test case this is discoursetest.org.
+###设定主机名称
 
-## Edit Configuration Files
-
-At various points in the installation procedure, you will need to edit configuration files with a text editor. `vi` is installed by default and is the de facto standard editor used by admins (although it appears that `nano` is configured as the default editor for many users in the Ubuntu image), so I use `vi` for any editing commands, but you may want to consider installing the editor of your choice.
-
-## Set the Host Name
-
-EC2's provisioning procedure doesn't assume your instance will require a hostname when it is created. I'd recommend editing /etc/hosts to correctly contain your hostname.
+这里需要用到文本编辑器，你可以根据自己的喜好使用 vi 或者 emacs，Ubuntu 12.10 系统里默认的是 nano。
 
 ```bash
-$ sudo vi /etc/hosts
+$ sudo nano /etc/hosts
 ```
-The first line of my /etc/hosts file looks like:
+
+在第一行后面加入自己的域名，本文修改成：
 
 ```bash
-127.0.0.1  forum.discoursetest.org forum localhost
+127.0.0.1  localhost ofgeek.com
 ```
 
-You should replace discoursetest.org with your own domain name. 
+确认无误后，按 Ctrl+X 保存，按 y 确认后退出。
 
-## Configure Postgres User Account
+### 配置数据库
 
-Discourse uses the Postgres database to store forum data. The configuration procedure is similar to MySQL, but I am a Postgres newbie, so if you have improvements to this aspect of the installation procedure, please let me know.
-
-Note: this is the easiest way to setup the Postgres server, but it also creates a highly privileged Postgres user account. Future revisions of this document may offer alternatives for creating the Postgres DBs, which would allow Discourse to login to Postgres as a user with lower privileges.
+Discourse 使用 Postgres 数据库。为数据库增加用户 admin，并设置好密码。请将密码保存好，后面的设置中还需用到。
 
 ```bash
 $ sudo -u postgres createuser admin -s -P
 ```
 
-It will ask for a password for the account, so pick one and remember it.  You will need the password for this database account when editing the Discourse database configuration file.
+### 安装并配置 RVM 和 Ruby
 
-## Install and Configure RVM and Ruby
+本文使用 RVM 来安装和管理 Ruby 及相关的 Gem。
 
-I chose to use RVM to manage installations of Ruby and Gems.  These instructions will employ a multi-user RVM installation so that all user accounts will have access to RVM, Ruby and the gemsets we will create.
-
-First, install RVM and add your admin account to the `rvm` group:
+首先，安装 RVM，并将 admin 用户加入 rvm 组。
 
 ```bash
 $ \curl -L https://get.rvm.io | sudo bash -s stable
 $ sudo adduser admin rvm
 ```
 
-After adding yourself to the `rvm` group, you will need to log out and log back in to register the change and activate RVM for your session.
+然后注销一次，再重新登录，使得变更生效，并激活 RVM。
 
-Then install Ruby v1.9.3 and create a gemset for Discourse:
+```bash
+$ logout
+$ ssh@ofgeek.com
+```
+
+再安装 Ruby v1.9.3 并为 Discourse 创建一个 Gem 集。
 
 ```bash
 $ rvm install 1.9.3
@@ -112,61 +98,48 @@ $ rvm use --default 1.9.3
 $ rvm gemset create discourse
 ```
 
-*Note:* Some people are using Ruby v2.0 for their installations to good effect, but I have not tested version 2 with these instructions.
+### 获取 Discourse 源代码并搭建安装环境
 
-## Pull and Configure the Discourse Application
-
-Now we are ready install the actual Discourse application. This will pull a copy of the Discourse app from my own branch. The advantage of using this branch is that it has been tested with these instructions, but it may fall behind the master which is rapidly changing. 
+在 admin 的主目录里创建一个 source 目录，使用 git 将 Discourse 的源代码放在其中，然后进入该目录。
 
 ```bash
-# I prefer to keep source code in its own subdirectory
 $ mkdir source
 $ cd source
-# Pull the latest version from github.
-$ git clone https://github.com/lee-dohm/discourse.git
+$ git clone https://github.com/discourse/discourse.git
 $ cd discourse
 ```
 
-Create `.ruby-version` and `.ruby-gemset` for Discourse:
+为 Discourse 创建 .ruby-version 和 .ruby-gemset：
 
 ```bash
 $ echo "1.9.3" > .ruby-version
 $ echo "discourse" > .ruby-gemset
 ```
 
-Now it is necessary to leave that directory and re-enter it, so that `rvm` will notice the `.ruby-version` and `.ruby-gemset` files that were just created.
+退到 admin 主目录，然后再次进入 Discourse 目录，以便 rvm 对 .ruby-version 和 .ruby-gemset 的管理生效。
 
 ```bash
 $ cd ~ && cd ~/source/discourse
 ```
 
-Install the gems necessary for Discourse:
+安装 Discourse 所需的 Gem：
 
 ```bash
 $ bundle install
 ```
 
-## Set Discourse Application Settings
+### 修改 Discourse 的相关配置文件
 
-Now you have set the Discourse application settings. The configuration files are in a directory called `config`.  There are sample configuration files included, so you need to copy these files and modify them with your own changes.
+Discourse 所有的配置文件都放在 config 目录中，其中带有 sample 字样的都是范例文件，按照本文的安装过程仅需修改 database.yml 和 redis.yml 即可。
 
 ```
 $ cd ~/source/discourse/config
 $ cp ./database.yml.sample ./database.yml
 $ cp ./redis.yml.sample ./redis.yml
+$ nano ./database.yml
 ```
 
-Now you need to edit the configuration files and apply your own settings. 
-
-Start by editing the database configuration file which should be now located at `~/source/discourse/config/database.yml`.
-
-```bash
-$ vi ~/source/discourse/config/database.yml
-```
-
-Edit the file to add your Postgres username and password to each configuration in the file. Also add `localhost` to the production configuration because the production DB will also be run on the localhost in this configuration.
-
-When you are done the file should look similar to:
+本文修改后的 database.yml 如下，请结合你的实际情况加以修改。
 
 ```yaml
 development:
@@ -205,50 +178,43 @@ production:
   pool: 5
   timeout: 5000
   host_names:
-    - production.localhost
+    - "ofgeek.com"
 ```
 
-I'm not a fan of entering the DB password as clear text in the database.yml file. If you have a better solution to this, let me know. 
+### 部署开发数据库并启动服务
 
-## Deploy the Database and Start the Server
-
-Now you should be ready to deploy the database and start the server.
-
-This will start the development environment on port 3000.
+为了确保 Discourse 的安装环境正确，在正式部署生产环境之前，可以先启动开发模式（development）进行检测。
 
 ```bash
 $ cd ~/source/discourse
-# Set Rails configuration
+# 进入开发模式
 $ export RAILS_ENV=development
+# 生成数据库
 $ rake db:create
+# 导入初始化数据
+$ psql discourse_development < pg_dumps/production-image.sql
 $ rake db:migrate
 $ rake db:seed_fu
+# 启动 Thin 服务器
 $ thin start
 ```
 
-I tested the configuration by going to http://discoursetest.org:3000/
+此时，在浏览器地址栏中输入 http://ofgeek.com:3000/ 并回车，如果一切正确，那么你应该可以看到 Discourse 的开发模式界面了。
 
-## Installing the Production Environment
+## 部署生产环境
 
-I'm a Unix and Rails newb (which is why I'm doing this the hard way) so I had a few false starts even before getting things up off the ground.  I currently have the following stack:
+在生产环境中，本文使用了以下服务：
 
-* `nginx` as load balancer
-* `thin` as web server
-* `sidekiq` as worker
-* `clockwork` as scheduler
-* Using init.d for `nginx` and `thin`
-* Using Upstart for `sidekiq` and `clockwork`
+* nginx 作为负载均衡
+* thin 作为服务器
+* sidekiq 负责任务排序
+* clockwork 负责任务调度
+* init.d 负责管理 nginx 和 thin
+* Upstart 负责管理 sidekiq 和 clockwork
 
-You may ask why I'm using two different systems for process maintenance and I will simply refer you to the aforementioned newbness.  I pieced all of this together from various guides and so things look a little patchy because of it. But it works!
+### 生产环境目录
 
-### Sources and Links
-
-I used the following sources to get my production installation working:
-
-* [Using Foreman for Production Services](http://michaelvanrooijen.com/articles/2011/06/08-managing-and-monitoring-your-ruby-application-with-foreman-and-upstart/)
-* [Setting up Thin](http://stackoverflow.com/questions/3230404/rvm-and-thin-root-vs-local-user) -- *also very useful information on creating RVM wrappers since the `www-data` user won't have Ruby in the PATH*
-
-### Set Up the `www-data` Account
+Discourse 默认的生产环境目录为 /var/www，如果系统中没有，则新建一个，将其加入 www-data 组，并设置相应权限。
 
 ```bash
 $ sudo mkdir /var/www
@@ -256,32 +222,33 @@ $ sudo chgrp www-data /var/www
 $ sudo chmod g+w /var/www
 ```
 
-### Configure `nginx`
+### 修改 nginx 配置文件
+
+nginx 的配置文件范例也在 config 目录中，仅需将其中的 server_name 改为你自己的域名即可。
 
 ```bash
 $ cd ~/source/discourse/
+& nano config/nginx.sample.conf
+# 改完后将其复制 nginx 配置文件目录中，并改名为 discourse.conf
 $ sudo cp config/nginx.sample.conf /etc/nginx/sites-available/discourse.conf
-```
-
-Edit `/etc/nginx/sites-available/discourse.conf` and set `server_name` to the domain you want to use. When done, enable the site.
-
-```bash
-$ sudo vi /etc/nginx/sites-available/discourse.conf
+# 建立一个连接
 $ sudo ln -s /etc/nginx/sites-available/discourse.conf /etc/nginx/sites-enabled/discourse.conf
+# 删除其它所有 nginx 的默认配置文件
 $ sudo rm /etc/nginx/sites-enabled/default
+# 启动 nginx 服务
 $ sudo service nginx start
 ```
 
-### Set a secret session token
+### 生成密钥会话令牌
 
 ```bash
 $ rake secret
 ```
 
-Now copy the output of the `rake secret` command, open `config/initializers/secret_token.rb` in your text editor, and:
+将生成的密钥记下来，打开 config/initializers/secret_token.rb 文件，执行以下步骤：
 
-* Erase all code in that file
-* Paste the token from `rake secret` in this code (replace [TOKEN]):
+* 清空该文件中的所有已有内容
+* 将下面这行代码拷贝到该文件中，用刚才生成的密钥代替 [TOKEN] 部分
 
 ```ruby
 Discourse::Application.config.secret_token = "[TOKEN]"

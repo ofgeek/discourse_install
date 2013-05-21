@@ -11,7 +11,7 @@
 - 一台安装 Ubuntu 12.10 x86 操作系统的 VPS 服务器
 - 内存 1G （Discourse 官方推荐的最小值）
 
-## 安装并测试 Discourse
+## 0 安装并测试 Discourse
 
 **注意：为了操作的安全，不推荐直接使用 root 账户安装 Discourse，建议在 VPS 上增加一个用户（本文设为 admin，你可以任意选择喜欢的名称），专门用于安装 Discourse。本文中，VPS 的主机名即为域名 ofgeek.com，读者请根据实际情况自行修改。**
 
@@ -202,7 +202,7 @@ $ thin start
 
 此时，用浏览器打开 http://ofgeek.com:3000/，如果一切正确，那么你应该可以看到 Discourse 的开发模式界面了。确认无误后，按 Ctrl+c 停止 thin 服务器，并继续下一步。
 
-## 部署生产模式
+## 1 部署生产模式
 
 生产模式即正式运行的模式，在生产模式中，本文使用了以下服务：
 
@@ -437,7 +437,7 @@ password: password
 
 **现在，开始享受你的 Discourse 之旅吧！**
 
-## 升级 Discourse
+## 2 升级 Discourse
 
 由于 Discourse 目前仍处于 beta 测试阶段，文件升级更新非常频繁，建议经常升级以保持最佳状态。
 
@@ -469,7 +469,7 @@ $ sudo service nginx start
 $ sudo start discourse
 ```
 
-## 致谢
+## 3 致谢
 
 本指南基于以下资源创建，特此表示感谢：
 

@@ -2,22 +2,12 @@
 
 #### 相关说明
 
-本指南基于以下资源创建：
-
-- Discourse 官方[开发者指南](https://github.com/discourse/discourse/blob/master/docs/DEVELOPER-ADVANCED.md)。
-- Christopher Baus <christopher@baus.net> 的 Discourse [安装指南（英文）](https://github.com/baus/install-discourse)。
-- Lee Dohm <lee@liftedstudios.com> 的 Discourse [安装指南（英文）](https://github.com/lee-dohm/install-discourse)。
-
-本指南遵循创作共用协议，欢迎转载，请注明出处及原始链接。
-
-关于 Discourse 的详细信息，请访问其[官方网站](http://discourse.org)。
+[Discourse](http://discourse.org) 意为“谈话”，是由 Stack Overflow 的联合创始人 Jeff Atwood 推出的下一代开源论坛程序，关于它的介绍可以看看 [OSChina](http://www.oschina.net/p/discourse) 和 [36kr](http://www.36kr.com/p/201256.html) 的报道。目前，网络上还没有一份详细、全面的中文 Discourse 安装指南，ofGEEK 特此整理编写本文，希望能够对有需要的人有所帮助。
 
 #### 本指南在以下环境安装成功
 
 - 一台安装 Ubuntu 12.10 x86 操作系统的 VPS 服务器
 - 内存 1G （Discourse 官方推荐的最小值）
-
-
 
 ## 安装并测试 Discourse
 
@@ -199,11 +189,11 @@ $ rake db:seed_fu
 $ thin start
 ```
 
-此时，在浏览器地址栏中输入 http://ofgeek.com:3000/ 并回车，如果一切正确，那么你应该可以看到 Discourse 的开发模式界面了。
+此时，在浏览器地址栏中输入 http://ofgeek.com:3000/ 并回车，如果一切正确，那么你应该可以看到 Discourse 的开发模式界面了。确认无误后，可以按 Ctrl+C 停止开发模式，并进入下一步。
 
-## 部署生产环境
+## 部署生产（production）环境
 
-在生产环境中，本文使用了以下服务：
+生产环境即正式运行的环境，在生产环境中，本文使用了以下服务：
 
 * nginx 作为负载均衡
 * thin 作为服务器
@@ -235,8 +225,6 @@ $ sudo cp config/nginx.sample.conf /etc/nginx/sites-available/discourse.conf
 $ sudo ln -s /etc/nginx/sites-available/discourse.conf /etc/nginx/sites-enabled/discourse.conf
 # 删除其它所有 nginx 的默认配置文件
 $ sudo rm /etc/nginx/sites-enabled/default
-# 启动 nginx 服务
-$ sudo service nginx start
 ```
 
 ### 生成密钥会话令牌
@@ -254,25 +242,25 @@ $ rake secret
 Discourse::Application.config.secret_token = "[TOKEN]"
 ```
 
-### Create Production Database
+### 建立生产环境数据库
 
 ```bash
 $ export RAILS_ENV=production
 $ rake db:create db:migrate db:seed_fu
+# 导入初始化数据
+$ psql discourse < pg_dumps/production-image.sql
 ```
 
-### Deploy Discourse App to `/var/www`
+### 将 Discourse 部署到 /var/www
 
 ```bash
-$ export RAILS_ENV=production
+# 编译源文件
 $ rake assets:precompile
 $ sudo -u www-data cp -r ~/source/discourse/ /var/www
 $ sudo -u www-data mkdir /var/www/discourse/tmp/sockets
 ```
 
-### Configure `thin`
-
-I set up the `rvm` wrapper for Ruby v1.9.3, but you can configure it for whatever version you decide to use. *Note:* `rvmsudo` executes a command as `root` but with access to the current `rvm` environment.
+### 配置 thin 服务器
 
 ```bash
 $ cd /var/www/discourse
@@ -281,60 +269,57 @@ $ rvmsudo thin config -C /etc/thin/discourse.yml -c /var/www/discourse --servers
 $ rvm wrapper 1.9.3@discourse bootup thin
 ```
 
-After generating the configuration, you'll need to edit (using `sudo`) the `/etc/thin/discourse.yml` file to change from `port` to `socket` to make things work with the default `nginx` configuration.  Just replace the line `port: 3000` with:
+配置文件生成后，需要修改 /etc/thin/discourse.yml 文件，将其中的：
+
+```
+port: 3000
+```
+
+修改为：
 
 ```yaml
 socket: tmp/sockets/thin.sock
 ```
 
-Then you'll need to edit the `thin` init script:
+还需修改 Thin 的初始化脚本：
 
 ```bash
 $ sudo vi /etc/init.d/thin
 ```
 
-Change the line starting with `DAEMON=` to:
+将 DAEMON= 那一行改为：
 
 ```text
 DAEMON=/usr/local/rvm/bin/bootup_thin
 ```
 
-Start the service:
 
-```bash
-$ sudo service thin start
-```
 
-### Use `foreman` to help configure `sidekiq` and `clockwork`
+### 使用 foreman 来配置 sidekiq 和 clockwork
 
-As of this writing, Discourse comes with a sample `Procfile` for `foreman`.  On the other hand, `foreman` is not part of the `Gemfile`, so you will need to install it manually:
+安装 foreman 并生成 Upstart 配置文件：
 
 ```bash
 $ gem install foreman
-```
-
-Once that is complete then you can use `foreman` to generate the Upstart configuration:
-
-```bash
 $ rvmsudo foreman export upstart /etc/init -a discourse -u www-data
 ```
 
-This will create a number of files in your `/etc/init` directory that all start with the name `discourse`.  Since we are using `init.d` to handle `thin`, we should remove the configuration for `thin` in Upstart:
+本文使用 init.d 来管理 Thin 服务器，所以不需要 Upstart 生成的 Thin 相关配置文件，将其删除：
 
 ```bash
 $ sudo rm /etc/init/discourse-web*
 ```
 
-Then we need to create `rvm` wrappers for `sidekiq` and `clockwork` so that the `www-data` user can execute these tools:
+为 sidekiq 和 clockwork 生成 rvm 封装：
 
 ```bash
 $ rvm wrapper 1.9.3@discourse bootup sidekiq
 $ rvm wrapper 1.9.3@discourse bootup clockwork
 ```
 
-Finally, all we need to do is update the `/etc/init/discourse-clockwork-1.conf` and `/etc/init/discourse-sidekiq-1.conf` files to use the `rvm` wrapper for launching the tools.
+修改 /etc/init/discourse-clockwork-1.conf 和 /etc/init/discourse-sidekiq-1.conf 文件，便于使用 rvm 来管理：
 
-#### `discourse-clockwork-1.conf`
+#### discourse-clockwork-1.conf 修改后如下：
 
 ```text
 start on starting discourse-clockwork
@@ -344,7 +329,7 @@ respawn
 exec su - www-data -c 'cd /var/www/discourse; export PORT=5200; /usr/local/rvm/bin/bootup_clockwork config/clock.rb >> /var/log/discourse/clockwork-1.log 2>&1'
 ```
 
-#### `discourse-sidekiq-1.conf`
+#### discourse-sidekiq-1.conf 修改后如下：
 
 ```text
 start on starting discourse-sidekiq
@@ -354,36 +339,37 @@ respawn
 exec su - www-data -c 'cd /var/www/discourse; export PORT=5100; /usr/local/rvm/bin/bootup_sidekiq -e production >> /var/log/discourse/sidekiq-1.log 2>&1'
 ```
 
-#### Start the Services
+### 启动所有服务
 
 ```bash
+$ cd /var/www/discourse
+$ sudo service thin start
+$ sudo service nginx start
 $ sudo start discourse
+$ sudo clockworkd -c config/clock.rb start
+$ bundle exec sidekiq -d -L ~/source/discourse/log/sidekiq.log
 ```
 
-### Create Discourse Admin Account
+到这里，生产环境就部署完成了。此时用浏览器打开 http://www.ofgeek.com ，就能看到正式的 Discourse 界面。论坛管理员的初始用户名和密码分别是：
 
-* Logon to the site and create an account using the application UI
-* Now make that account the admin:
-
-```bash
-# Start the Rails console
-$ rails c
+```text
+username: forumadmin
+password: password
 ```
 
-```ruby
-# Take the first (only) user account and mark it as admin
-u = User.first
-u.admin = true
-u.save
+登录进去之后，改为更加安全的密码。
 
-# Create a confirmation for their email address, if necessary
-token = u.email_tokens.create(email: u.email)
-EmailToken.confirm(token.token)
-```
+### 启用中文支持
 
-## Upgrading Versions in Production
+目前，Discourse 已经可以支持中文界面，使用管理员账户登录后，点击右上角的管理员名称进入设置界面，然后再点击右上角的小扳手 Admin 进入系统管理界面，在第二项 Settings 中，把 default_locale 从默认的 en 更改为 zh_CN，然后返回论坛主界面，按 Ctrl+F5 刷新浏览器缓存，中文界面就出来了。
 
-### Stop the Servers
+**现在，开始享受你的 Discourse 之旅吧！**
+
+## 升级 Discourse
+
+由于 Discourse 目前仍处于 beta 测试阶段，文件升级更新非常频繁，建议经常升级以保持最佳状态。
+
+### 停止相关服务
 
 ```bash
 $ sudo stop discourse
@@ -391,17 +377,19 @@ $ sudo service nginx stop
 $ sudo service thin stop
 ```
 
-### Pull Down Latest Code and Update Application
+### 更新、编译并部署源文件
 
 ```bash
 $ cd ~/source/discourse
 $ git pull
+$ bundle install
 $ export RAILS_ENV=production
 $ rake db:migrate db:seed_fu assets:precompile
+$ sudo rm -r -f /var/www/discourse/.git
 $ sudo -u www-data cp -r ~/source/discourse /var/www
 ```
 
-### Start the Servers
+### 重新启动相关服务
 
 ```bash
 $ sudo service thin start
@@ -409,26 +397,14 @@ $ sudo service nginx start
 $ sudo start discourse
 ```
 
-## TROUBLESHOOTING
+## 致谢
 
-### You get complaints in the logs about gems that haven't been checked out
+本指南基于以下资源创建，特此表示感谢：
 
-To solve this:
+- Discourse 官方[开发者指南](https://github.com/discourse/discourse/blob/master/docs/DEVELOPER-ADVANCED.md)。
+- Christopher Baus <christopher@baus.net> 的 Discourse [安装指南（英文）](https://github.com/baus/install-discourse)。
+- Lee Dohm <lee@liftedstudios.com> 的 Discourse [安装指南（英文）](https://github.com/lee-dohm/install-discourse)。
 
-```bash
-$ cd ~/source/discourse
-$ bundle pack --all
-$ bundle install --path vendor/cache
-```
+本指南遵循创作共用协议，欢迎转载，请注明出处及原始链接。
 
-After that follow the update instructions in the previous section.
-
-## TODO
-
-* Fix `bundle exec` issue
-* Add [Ruby tuning recommendations](http://meta.discourse.org/t/tuning-ruby-and-rails-for-discourse/4126)
-* Convert `thin` to use Upstart for process monitoring
-* Convert `nginx` to use Upstart for process monitoring?
-* Convert to using Ruby 2.0
-* Add script to create admin Discourse account
-* Add scripts to automate a lot of this process
+&copy; ofgeek.com 最初发布于 2013.5.21 。

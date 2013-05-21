@@ -1,4 +1,4 @@
-# 在 VPS 上安装 Discourse 的中文指南
+# Discourse 安装完全中文指南
 
 #### 相关说明
 

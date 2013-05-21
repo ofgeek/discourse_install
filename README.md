@@ -4,6 +4,8 @@
 
 [Discourse](http://discourse.org) 意为“谈话”，是由 Stack Overflow 的联合创始人 Jeff Atwood 推出的下一代开源论坛程序，关于它的介绍可以看看 [OSChina](http://www.oschina.net/p/discourse) 和 [36Kr](http://www.36kr.com/p/201256.html) 的报道。目前，网络上还没有一份详细、全面的中文 Discourse 安装指南，[ofGEEK](http://www.ofgeek.com) 特此整理编写本文，希望能够对需要的人有所帮助。
 
+更多有关信息与讨论，请访问 [ofGEEK 讨论区](http://bbs.ofgeek.com)（这个讨论区就是用 Discourse 搭建而成的）。
+
 #### 本指南在以下环境安装成功
 
 - 一台安装 Ubuntu 12.10 x86 操作系统的 VPS 服务器
@@ -478,4 +480,4 @@ $ sudo start discourse
 
 本指南遵循创作共用协议，欢迎转载，请注明出处及原始链接。
 
-&copy; ofgeek.com 最初发布于 2013.5.21 。
+&copy; [ofgeek.com](http://www.ofgeek.com) 最初发布于 2013.5.21 。

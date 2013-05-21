@@ -80,7 +80,7 @@ $ sudo -u postgres createuser admin -s -P
 首先，安装 RVM，并将 admin 用户加入 rvm 组。
 
 ```bash
-$ \curl -L https://get.rvm.io | sudo bash -s stable
+$ curl -L https://get.rvm.io | sudo bash -s stable
 $ sudo adduser admin rvm
 ```
 

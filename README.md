@@ -2,7 +2,7 @@
 
 #### 相关说明
 
-[Discourse](http://discourse.org) 意为“谈话”，是由 Stack Overflow 的联合创始人 Jeff Atwood 推出的下一代开源论坛程序，关于它的介绍可以看看 [OSChina](http://www.oschina.net/p/discourse) 和 [36kr](http://www.36kr.com/p/201256.html) 的报道。目前，网络上还没有一份详细、全面的中文 Discourse 安装指南，ofGEEK 特此整理编写本文，希望能够对有需要的人有所帮助。
+[Discourse](http://discourse.org) 意为“谈话”，是由 Stack Overflow 的联合创始人 Jeff Atwood 推出的下一代开源论坛程序，关于它的介绍可以看看 [OSChina](http://www.oschina.net/p/discourse) 和 [36Kr](http://www.36kr.com/p/201256.html) 的报道。目前，网络上还没有一份详细、全面的中文 Discourse 安装指南，[ofGEEK](http://www.ofgeek.com) 特此整理编写本文，希望能够对需要的人有所帮助。
 
 #### 本指南在以下环境安装成功
 
@@ -11,7 +11,7 @@
 
 ## 安装并测试 Discourse
 
-**说明：为了操作的安全，不推荐直接使用 root 账户安装 Discourse，建议在 VPS 上增加一个用户，本文设为 admin，你可以任意设定喜欢的名称。本文将 VPS 的主机名设为 ofgeek.com，读者请根据实际情况自行修改。**
+**注意：为了操作的安全，不推荐直接使用 root 账户安装 Discourse，建议在 VPS 上增加一个用户（本文设为 admin，你可以任意选择喜欢的名称），专门用于安装 Discourse。本文中，VPS 的主机名即为域名 ofgeek.com，读者请根据实际情况自行修改。**
 
 ### 登录 VPS
 
@@ -30,29 +30,39 @@ $ logout
 $ ssh admin@ofgeek.com
 ```
 
-### 安装 Discourse 所需的系统包文件
+更新 VPS 的操作系统：
+
+```bash
+$ sudo apt-get update
+$ sudo apt-get upgrade
+```
+
+如果更新过程中，系统提示是否更新 grub 菜单，请选择不更新。
+
+### 安装 Discourse 所需的包文件
 
 ```bash
 $ sudo apt-get install git-core build-essential postgresql postgresql-contrib libxml2-dev libxslt-dev libpq-dev redis-server nginx postfix
 ```
 
-在安装过程中，会弹出 Postfix 的配置界面，它是 Linux 系统中管理邮件程序，一般情况下请选择"Internet Site"即可，然后在下一步输入你自己的域名，在本文中则是 ofgeek.com。
+在安装过程中，会弹出 Postfix 的配置界面，它是 Linux 系统中的邮件配置程序，一般情况下请选择"Internet Site"即可，然后在下一步输入你自己的域名，在本文中则是 ofgeek.com。
 
 ###设定主机名称
 
-这里需要用到文本编辑器，你可以根据自己的喜好使用 vi 或者 emacs，Ubuntu 12.10 系统里默认的是 nano。
+这里需要用到文本编辑器，你可以根据自己的喜好使用 vi、emacs 或其它，Ubuntu 12.10 系统里默认的是 nano。
 
 ```bash
 $ sudo nano /etc/hosts
 ```
 
-在第一行后面加入自己的域名，本文修改成：
+在第一行下面加入你的 VPS 的 IP 和域名，本文修改成：
 
-```bash
-127.0.0.1  localhost ofgeek.com
+```text
+127.0.0.1  localhost
+12.34.56.78  ofgeek.com
 ```
 
-确认无误后，按 Ctrl+X 保存，按 y 确认后退出。
+确认无误后，按 Ctrl+x 保存，按 y 确认后退出。
 
 ### 配置数据库
 
@@ -60,6 +70,7 @@ Discourse 使用 Postgres 数据库。为数据库增加用户 admin，并设置
 
 ```bash
 $ sudo -u postgres createuser admin -s -P
+# 按照系统提示，输入两遍密码
 ```
 
 ### 安装并配置 RVM 和 Ruby
@@ -90,7 +101,7 @@ $ rvm gemset create discourse
 
 ### 获取 Discourse 源代码并搭建安装环境
 
-在 admin 的主目录里创建一个 source 目录，使用 git 将 Discourse 的源代码放在其中，然后进入该目录。
+在 admin 的主目录里创建一个 source 目录，使用 git 获取 Discourse 的源代码放在其中，然后进入该目录。
 
 ```bash
 $ mkdir source
@@ -99,7 +110,7 @@ $ git clone https://github.com/discourse/discourse.git
 $ cd discourse
 ```
 
-为 Discourse 创建 .ruby-version 和 .ruby-gemset：
+为 Discourse 指定版本 .ruby-version 和 Gem 集 .ruby-gemset：
 
 ```bash
 $ echo "1.9.3" > .ruby-version
@@ -120,7 +131,7 @@ $ bundle install
 
 ### 修改 Discourse 的相关配置文件
 
-Discourse 所有的配置文件都放在 config 目录中，其中带有 sample 字样的都是范例文件，按照本文的安装过程仅需修改 database.yml 和 redis.yml 即可。
+Discourse 所有的配置文件都放在 config 目录中，其中带有 sample 字样的都是范例文件，本文的安装方法需要修改 database.yml 和 redis.yml。
 
 ```
 $ cd ~/source/discourse/config
@@ -129,14 +140,14 @@ $ cp ./redis.yml.sample ./redis.yml
 $ nano ./database.yml
 ```
 
-本文修改后的 database.yml 如下，请结合你的实际情况加以修改。
+本文修改后的 database.yml 如下，请结合你的实际情况加以修改，记得将 production 数据库最后的主机名改为你自己的域名。
 
 ```yaml
 development:
   adapter: postgresql
   database: discourse_development
   username: admin
-  password: <your_postgres_password>
+  password: 填入之前记下的数据库密码
   host: localhost
   pool: 5
   timeout: 5000
@@ -150,7 +161,7 @@ test:
   adapter: postgresql
   database: discourse_test
   username: admin
-  password: <your_postgres_password>
+  password: 填入之前记下的数据库密码
   host: localhost
   pool: 5
   timeout: 5000
@@ -163,7 +174,7 @@ production:
   adapter: postgresql
   database: discourse
   username: admin
-  password: <your_postgres_password>
+  password: 填入之前记下的数据库密码
   host: localhost
   pool: 5
   timeout: 5000
@@ -173,27 +184,25 @@ production:
 
 ### 部署开发数据库并启动服务
 
-为了确保 Discourse 的安装环境正确，在正式部署生产环境之前，可以先启动开发模式（development）进行检测。
+为了确保 Discourse 的安装环境正确，在正式部署生产（production）模式之前，可以先启动开发模式（development）进行检测。
 
 ```bash
 $ cd ~/source/discourse
 # 进入开发模式
 $ export RAILS_ENV=development
-# 生成数据库
+# 生成开发模式数据库
 $ rake db:create
-# 导入初始化数据
-$ psql discourse_development < pg_dumps/production-image.sql
 $ rake db:migrate
 $ rake db:seed_fu
-# 启动 Thin 服务器
+# 启动 thin 服务器
 $ thin start
 ```
 
-此时，在浏览器地址栏中输入 http://ofgeek.com:3000/ 并回车，如果一切正确，那么你应该可以看到 Discourse 的开发模式界面了。确认无误后，可以按 Ctrl+C 停止开发模式，并进入下一步。
+此时，用浏览器打开 http://ofgeek.com:3000/，如果一切正确，那么你应该可以看到 Discourse 的开发模式界面了。确认无误后，按 Ctrl+c 停止 thin 服务器，并继续下一步。
 
-## 部署生产（production）环境
+## 部署生产模式
 
-生产环境即正式运行的环境，在生产环境中，本文使用了以下服务：
+生产模式即正式运行的模式，在生产模式中，本文使用了以下服务：
 
 * nginx 作为负载均衡
 * thin 作为服务器
@@ -202,9 +211,9 @@ $ thin start
 * init.d 负责管理 nginx 和 thin
 * Upstart 负责管理 sidekiq 和 clockwork
 
-### 生产环境目录
+### 生产模式目录
 
-Discourse 默认的生产环境目录为 /var/www，如果系统中没有，则新建一个，将其加入 www-data 组，并设置相应权限。
+Discourse 默认的生产模式目录为 /var/www，如果系统中没有，则新建一个，将其加入 www-data 组，并设置相应权限。
 
 ```bash
 $ sudo mkdir /var/www
@@ -214,14 +223,14 @@ $ sudo chmod g+w /var/www
 
 ### 修改 nginx 配置文件
 
-nginx 的配置文件范例也在 config 目录中，仅需将其中的 server_name 改为你自己的域名即可。
+nginx 的范例配置文件也在 config 目录中，仅需将其中的 server_name 改为你自己的域名即可。
 
 ```bash
 $ cd ~/source/discourse/
 & nano config/nginx.sample.conf
-# 改完后将其复制 nginx 配置文件目录中，并改名为 discourse.conf
+# 改完后将其复制到 nginx 配置文件目录中，并改名为 discourse.conf
 $ sudo cp config/nginx.sample.conf /etc/nginx/sites-available/discourse.conf
-# 建立一个连接
+# 建立一个符号连接
 $ sudo ln -s /etc/nginx/sites-available/discourse.conf /etc/nginx/sites-enabled/discourse.conf
 # 删除其它所有 nginx 的默认配置文件
 $ sudo rm /etc/nginx/sites-enabled/default
@@ -233,7 +242,13 @@ $ sudo rm /etc/nginx/sites-enabled/default
 $ rake secret
 ```
 
-将生成的密钥记下来，打开 config/initializers/secret_token.rb 文件，执行以下步骤：
+将生成的密钥记下来，打开 config/initializers/secret_token.rb 文件
+
+```bash
+$ nano config/initializers/secret_token.rb
+```
+
+执行以下步骤：
 
 * 清空该文件中的所有已有内容
 * 将下面这行代码拷贝到该文件中，用刚才生成的密钥代替 [TOKEN] 部分
@@ -242,20 +257,58 @@ $ rake secret
 Discourse::Application.config.secret_token = "[TOKEN]"
 ```
 
-### 建立生产环境数据库
+### 建立生产模式数据库并编译源文件
 
 ```bash
 $ export RAILS_ENV=production
-$ rake db:create db:migrate db:seed_fu
+# 生成数据库
+$ rake db:create
 # 导入初始化数据
 $ psql discourse < pg_dumps/production-image.sql
+$ rake db:migrate
+$ rake db:seed_fu
+# 编译源文件
+$ rake assets:precompile
+```
+
+### 设定邮件发送方式
+
+Discourse 中，系统邮件是非常重要的，它涉及到激活用户、修改邮箱、修改密码等多项功能。如果你希望用 VPS 本身发送邮件，则需安装 sendmail（具体设置方法请自行查阅）：
+
+```bash
+$ sudo apt-get install sendmail
+```
+
+如果你已经有了邮件服务器，则可以通过 smtp 服务发送系统邮件，本文以 Gmail 为例。
+
+修改 config/environments/production.sample.rb 文件：
+
+```bash
+$ cp config/environments/production.sample.rb config/environments/production.rb
+& nano config/environments/production.rb
+```
+
+修改其中有关邮件发送的部分，本文中如下：
+
+```text
+  #config.action_mailer.delivery_method = :sendmail
+  #config.action_mailer.sendmail_settings = {arguments: '-i'}
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.perform_deliveries = true
+  config.action_mailer.raise_delivery_errors = true
+  config.action_mailer.smtp_settings = {
+  :address              => "smtp.gmail.com",
+  :port                 => 587,
+  :domain               => 'mail.google.com',
+  :user_name            => 'xxx@gmail.com',
+  :password             => 'password',
+  :authentication       => 'plain',
+  :enable_starttls_auto => true  }
 ```
 
 ### 将 Discourse 部署到 /var/www
 
 ```bash
-# 编译源文件
-$ rake assets:precompile
 $ sudo -u www-data cp -r ~/source/discourse/ /var/www
 $ sudo -u www-data mkdir /var/www/discourse/tmp/sockets
 ```
@@ -281,7 +334,7 @@ port: 3000
 socket: tmp/sockets/thin.sock
 ```
 
-还需修改 Thin 的初始化脚本：
+还需修改 thin 的初始化脚本：
 
 ```bash
 $ sudo vi /etc/init.d/thin
@@ -293,18 +346,35 @@ $ sudo vi /etc/init.d/thin
 DAEMON=/usr/local/rvm/bin/bootup_thin
 ```
 
+### 配置 sidekiq 和 clockwork
 
-
-### 使用 foreman 来配置 sidekiq 和 clockwork
-
-安装 foreman 并生成 Upstart 配置文件：
+安装 foreman：
 
 ```bash
 $ gem install foreman
+```
+
+修改 Rails 环境，为 Discourse 优化垃圾回收机制
+
+```bash
+& sudo nano /var/www/discourse/.env
+```
+
+修改成这样：
+
+```text
+PORT=3000
+RAILS_ENV=production
+RUBY_GC_MALLOC_LIMIT=90000000
+```
+
+生成 Upstart 配置文件：
+
+```bash
 $ rvmsudo foreman export upstart /etc/init -a discourse -u www-data
 ```
 
-本文使用 init.d 来管理 Thin 服务器，所以不需要 Upstart 生成的 Thin 相关配置文件，将其删除：
+本文使用 init.d 来管理 thin 服务器，所以不需要 Upstart 生成的 thin 相关配置文件，将其删除：
 
 ```bash
 $ sudo rm /etc/init/discourse-web*
@@ -350,7 +420,7 @@ $ sudo clockworkd -c config/clock.rb start
 $ bundle exec sidekiq -d -L ~/source/discourse/log/sidekiq.log
 ```
 
-到这里，生产环境就部署完成了。此时用浏览器打开 http://www.ofgeek.com ，就能看到正式的 Discourse 界面。论坛管理员的初始用户名和密码分别是：
+到这里，生产模式就部署完成了。此时用浏览器打开 http://www.ofgeek.com ，就能看到正式的 Discourse 界面。论坛管理员的初始用户名和密码分别是：
 
 ```text
 username: forumadmin
@@ -384,7 +454,7 @@ $ cd ~/source/discourse
 $ git pull
 $ bundle install
 $ export RAILS_ENV=production
-$ rake db:migrate db:seed_fu assets:precompile
+$ rake db:migrate db:seed_fu assets:clean assets:precompile
 $ sudo rm -r -f /var/www/discourse/.git
 $ sudo -u www-data cp -r ~/source/discourse /var/www
 ```

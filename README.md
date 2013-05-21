@@ -1,4 +1,4 @@
-# Discourse 安装完全中文指南
+# Discourse 中文完全安装指南
 
 #### 相关说明
 
